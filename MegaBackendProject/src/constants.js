@@ -1,0 +1,1 @@
+export const DB_name="youtube" //can keep it in giignore but its not that sensitive
