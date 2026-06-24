@@ -19,6 +19,13 @@ const userSchema=new Schema(
             trim: true,
             index:true,  //specially in mongodb if we want to implement searching....doing indexing is good        
         },
+        email:{
+            type:String,
+            required:true,
+            unique:true,
+            lowercase:true,
+            trim: true,
+        },
         avatar:{
             type:String,  //cloudinary se url use karenge
             required:true,
@@ -45,8 +52,7 @@ const userSchema=new Schema(
 
 userSchema.pre("save", async function(next){
     if(!this.isModified("password")) return next();
-    this.password=bcrypt.hash(this.password,10)
-    next()
+    this.password= await bcrypt.hash(this.password,10)
 })
 
 userSchema.methods.isPasswordCorrect =async function(password){

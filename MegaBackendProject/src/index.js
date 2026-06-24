@@ -1,7 +1,7 @@
 // require('dotenv').config({path : './env'});
 
 import dotenv from "dotenv"
-import {app} from "./app.js"
+ 
 
 // import connectDB from "./db"; ............wrong
 import connectDB from "./db/index.js";   //since we are using {type:module}.....ans ES module requires exact address of the file having that parameter
@@ -9,6 +9,8 @@ import connectDB from "./db/index.js";   //since we are using {type:module}.....
 dotenv.config({
     path:"./.env"
 });
+
+import {app} from "./app.js"
 
 connectDB()
 .then(()=>{
