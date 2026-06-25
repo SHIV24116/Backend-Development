@@ -330,6 +330,79 @@ const updateCoverImage=asynchandler(async(req,res)=>{  ////files wali cheeze pre
     .json(new ApiResponse(200,user,"CoverImage updated successfully"))
 })
 
+///////understand this aggregation pipeline properly from chatgpt once
+const getUserChannelProfile = asynchandler(async(req, res) => {
+    const {username} = req.params
+
+    if (!username?.trim()) {
+        throw new ApiError(400, "username is missing")
+    }
+
+    const channel = await User.aggregate([
+        {
+            $match: {
+                username: username?.toLowerCase()    //here we filterwd now we have only one document
+            }
+        },
+        {   //////now we want to look for the details of a particular channel
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }///here we got all the subscribers
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
+            }
+        },
+        {
+            $addFields: {
+                subscribersCount: {
+                    $size: "$subscribers"
+                },
+                channelsSubscribedToCount: {
+                    $size: "$subscribedTo"
+                },
+                isSubscribed: {
+                    $cond: {
+                        if: {$in: [req.user?._id, "$subscribers.subscriber"]},
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                fullName: 1,
+                username: 1,
+                subscribersCount: 1,
+                channelsSubscribedToCount: 1,
+                isSubscribed: 1,
+                avatar: 1,
+                coverImage: 1,
+                email: 1
+
+            }
+        }
+    ])
+
+    if (!channel?.length) {
+        throw new ApiError(404, "channel does not exists")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, channel[0], "User channel fetched successfully")
+    )
+})
+
 export {
     registerUser,
     loginUser,
@@ -339,7 +412,8 @@ export {
     getCurrentUser,
     updateAccountDetails,
     updateAvatar,
-    updateCoverImage
+    updateCoverImage,
+    getUserChannelProfile,
 }
 
 //jab bhi we are trying to get something from database always use async-await

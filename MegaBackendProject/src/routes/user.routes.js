@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginUser, logoutUser, refreshaccessToken, registerUser } from "../controllers/user.controller.js";
+import { changeCurrentPassword, getCurrentUser, getUserChannelProfile, getWatchHistory, loginUser, logoutUser, refreshaccessToken, registerUser, updateAccountDetails, updateAvatar, updateCoverImage } from "../controllers/user.controller.js";
 
 import {upload} from "../middlewares/multer.middleware.js"
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -27,5 +27,20 @@ router.route("/logout").post(verifyJWT,logoutUser)  //bas yahi pe middleware ko 
                                                      //middleware me jo next hota hai wahi batata hai...ki mera kaaam khatam now can move to next operation
 
 router.route("/refresh-token").post(refreshaccessToken)
+ ////how do we decide when to use verifyjwt???
+
+
+router.route("/change-password").post(verifyJWT,changeCurrentPassword)
+
+router.route("/current-user").get(verifyJWT,getCurrentUser)  //why get
+
+router.route("/update-account").patch(verifyJWT,updateAccountDetails) //why patch
+
+router.route("/avatar-update").patch(verifyJWT,upload.single("avatar"),updateAvatar)
+router.route("/coverImage-update").patch(verifyJWT,upload.single("/coverImage"),updateCoverImage)
+
+router.route("/c/:username").get(verifyJWT, getUserChannelProfile)  // ???
+router.route("/history").get(verifyJWT, getWatchHistory)         
+ 
 
 export default router
