@@ -50,8 +50,8 @@ const userSchema=new Schema(
 )
 
 
-userSchema.pre("save", async function(next){
-    if(!this.isModified("password")) return next();
+userSchema.pre("save", async function(next){  //in new versions of mongoose next is not defined...so we dont use it anymore
+    if(!this.isModified("password")) return;
     this.password= await bcrypt.hash(this.password,10)
 })
 
@@ -75,6 +75,7 @@ userSchema.methods.generateAccessToken =function(){
 }
 
 userSchema.methods.generateRefreshToken =function(){
+    
     return jwt.sign(
         {                   //this is the payload....whatever parameters we want to pass
             _id:this._id,
