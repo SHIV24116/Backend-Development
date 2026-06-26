@@ -4,7 +4,7 @@ A production-oriented backend API for a video sharing platform inspired by YouTu
 
 The project is built with Node.js, Express, MongoDB, Mongoose, JWT authentication, Multer, and Cloudinary. It is designed as a modular REST API where each domain has its own routes, controllers, models, middleware, and reusable utilities.
 
-> Status: actively in development. Core backend structure, authentication flow, media upload foundation, database models, and route modules are in place. Some advanced feature controllers are planned and being completed incrementally.
+> Status: actively in development. Core backend structure, authentication flow, media upload foundation, database models, and route modules are in place. Some advanced feature controllers like "dashbord,likes,comments,playlists,tweets" are planned and being completed incrementally.
 
 ## Features
 
@@ -238,19 +238,6 @@ Authorization: Bearer <accessToken>
 - `Tweet`: community post content and owner
 - `Playlist`: playlist metadata, video reference, owner
 - `Subscription`: subscriber-channel relationship
-
-## Development Roadmap
-
-- Complete all remaining TODO controller implementations
-- Add robust validation for request bodies and MongoDB ObjectIds
-- Add centralized Express error-handling middleware
-- Improve playlist schema to support multiple videos
-- Add pagination, filtering, and sorting for video and comment APIs
-- Add delete-from-Cloudinary support for replaced media
-- Add unit and integration tests
-- Add API documentation with Postman collection or Swagger/OpenAPI
-- Add role/ownership checks for update and delete actions
-- Add production logging and rate limiting
 
 ## Resume Highlights
 
