@@ -63,7 +63,7 @@ const registerUser = asynchandler(async(req,res)=>{
         throw new ApiError(409,"user with email or username already exists")
     }
 
-    const coverImageLocalPath= req.files?.avatar[0]?.path;
+    const avatarImageLocalPath= req.files?.avatar[0]?.path;
 
     //////when we do not upload cover image thiis line may causse problem so....do it in classic if-else way
     //const coverImageLocalPath= req.files?.coverImage[0]?.path;
@@ -72,7 +72,7 @@ const registerUser = asynchandler(async(req,res)=>{
         coverImageLocalPath = req.files.coverImage[0].path
     }
 
-    if(!avatarLocalPath) throw new ApiError(400,"Avatar file is required")
+    if(!avatarImageLocalPath) throw new ApiError(400,"Avatar file is required")
     
     //now we will upload images on cloudinary.....basic code is alredy written
     const avatar=await uploadoncloudinary(avatarLocalPath)
@@ -208,16 +208,16 @@ const refreshaccessToken=asynchandler(async(req,res)=>{
             httpOnly:true,
             secure:true
         }
-        const {access,refresh} =await generateAccessAndRefereshTokens(user._id)
+        const {accessToken,refreshToken} =await generateAccessAndRefereshTokens(user._id)
 
         return res
         .status(200)
-        .cookie("accessToken",access,options)
-        .cookie("RefreashToken",refresh,options)
+        .cookie("accessToken",accessToken,options)
+        .cookie("RefreshToken",refreshToken,options)
         .json(
             new ApiResponse(
                 200,
-                {access,refreshToken:refresh},
+                {accessToken,refreshToken:refreshToken},
                 "Access token refreshed successfully"
             )
         )
@@ -237,7 +237,7 @@ const changeCurrentPassword = asynchandler(async(req,res)=>{
         throw new ApiError(400,"Old password Incorrect")
     }
     user.password=newPassword
-    await ser.save({validatebeforeSave:false})
+    await user.save({validatebeforeSave:false})
 
     return res
     .status(200)
@@ -251,16 +251,16 @@ const getCurrentUser=asynchandler(async(req,res)=>{
 })
 
 const updateAccountDetails=asynchandler(async(req,res)=>{
-    const {fullName,email}=req.body //can add more fields
+    const {fullname,email}=req.body //can add more fields
 
-    if(!fullName || !email) {
+    if(!fullname || !email) {
         throw new ApiError(400,"All fiels are required")
     }
     const user=await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set:{
-                fullName,
+                fullname,
                 email:email
             }
         },
@@ -315,7 +315,7 @@ const updateCoverImage=asynchandler(async(req,res)=>{  ////files wali cheeze pre
         throw new ApiError(400,"Error while uploading on coverimage")
     }
 
-    await User.findByIdAndUpdate(
+    const user=await User.findByIdAndUpdate(
         req.user._id,
         {
             $set:{
@@ -379,7 +379,7 @@ const getUserChannelProfile = asynchandler(async(req, res) => {
         },
         {
             $project: {
-                fullName: 1,
+                fullname: 1,
                 username: 1,
                 subscribersCount: 1,
                 channelsSubscribedToCount: 1,
@@ -403,6 +403,62 @@ const getUserChannelProfile = asynchandler(async(req, res) => {
     )
 })
 
+/////understand this too once in chatgpt
+const getWatchHistory = asynchandler(async(req,res)=>{
+    const user=await User.aggregate([
+        {
+            $match:{
+                _id: new mongoose.Types.ObjectId(req.user._id)   //aggregation pipeline me _id is not defined we need to declare a mongoose id
+            }
+        },
+        {
+            $lookup:{
+                from :"videos",
+                localField:"watchHistory",
+                foreignField:"_id",
+                as:"watchHistory",
+                pipeline:[
+                    {         //sub pipelines
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            pipeline:[
+                                {
+                                    $project:{
+                                        fullName:1,
+                                        username:1,
+                                        avatar:1
+                                    }
+                                }
+                            ]
+
+                        }
+                    },
+                    {
+                        $addFields:{
+                            owner:{
+                                $first:"$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            user[0].watchHistory,
+            "Watch History fetched successfully"
+        )
+    )
+})
+
 export {
     registerUser,
     loginUser,
@@ -414,6 +470,7 @@ export {
     updateAvatar,
     updateCoverImage,
     getUserChannelProfile,
+    getWatchHistory
 }
 
 //jab bhi we are trying to get something from database always use async-await
